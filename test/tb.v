@@ -18,13 +18,30 @@ module tb ();
   reg rst_n;
   reg ena;
   reg [7:0] ui_in;
-  reg [7:0] uio_in;
+  reg master_scl;
+  reg master_sda_low;
+  reg addr_select;
+  reg write_en;
+  reg [3:0] write_addr;
   wire [7:0] uo_out;
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
+  wire sda_pin;
+  wire [7:0] uio_in;
 
-  // Replace tt_um_example with your module name:
-  tt_um_example user_project (
+  // Open-drain SDA: slave drive-low or master drive-low, otherwise pull up.
+  assign sda_pin = (uio_oe[1] && !uio_out[1]) ? 1'b0 : (master_sda_low ? 1'b0 : 1'b1);
+  assign uio_in  = {write_addr, write_en, addr_select, sda_pin, master_scl};
+
+  initial begin
+    master_scl     = 1'b1;
+    master_sda_low = 1'b0;
+    addr_select    = 1'b0;
+    write_en       = 1'b0;
+    write_addr     = 4'h0;
+  end
+
+  tt_um_venkataratnamb20_i2c user_project (
 
       // Include power ports for the Gate Level test:
 `ifdef GL_TEST

@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2024 Your Name
+ * Copyright (c) 2026 venkataratnamb20
  * SPDX-License-Identifier: Apache-2.0
  */
 
 `default_nettype none
 
-module tt_um_example (
+module tt_um_venkataratnamb20_i2c (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
@@ -16,12 +16,27 @@ module tt_um_example (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+  wire sda_drive;
 
-  // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+  i2c_slave_ram core (
+      .clk        (clk),
+      .rst_n      (rst_n),
+      .write_data (ui_in),
+      .write_addr (uio_in[7:4]),
+      .write_en   (uio_in[3]),
+      .addr_select(uio_in[2]),
+      .scl        (uio_in[0]),
+      .sda_in     (uio_in[1]),
+      .latched_byte(uo_out),
+      .sda_drive  (sda_drive)
+  );
+
+  // SDA is open-drain: drive low or release. SCL is input only.
+  assign uio_out = 8'h00;
+  assign uio_oe  = {6'b000000, sda_drive, 1'b0};
+
+  wire _unused = &{ena, 1'b0};
 
 endmodule
+
+`default_nettype wire
